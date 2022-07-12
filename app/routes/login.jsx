@@ -9,6 +9,14 @@ export const links = () => {
   return [{ rel: "stylesheet", href: stylesUrl }]
 }
 
+export const meta = () => {
+  return {
+    title: "Remix Jokes | Login",
+    description:
+      "Login to submit your own jokes to Remix Jokes!"
+  }
+}
+
 function validateUsername(username) {
   if (typeof username !== "string" || username.length < 3) {
     return `Usernames must be at least 3 characters long`

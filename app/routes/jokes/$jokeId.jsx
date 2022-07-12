@@ -4,6 +4,19 @@ import { Link, useLoaderData, useParams, useCatch } from "@remix-run/react"
 import { db } from "~/utils/db.server"
 import { getUserId, requireUserId } from "~/utils/session.server"
 
+export const meta = ({ data }) => {
+  if (!data) {
+    return {
+      title: "No joke",
+      description: "No joke found"
+    }
+  }
+  return {
+    title: `"${data.joke.name}" joke`,
+    description: `Enjoy the "${data.joke.name}" joke and much more`
+  }
+}
+
 export const loader = async ({ request, params }) => {
   const userId = await getUserId(request)
   const joke = await db.joke.findUnique({
