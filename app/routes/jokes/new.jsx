@@ -1,8 +1,16 @@
-import { json, redirect } from "@remix-run/node"
-import { useActionData } from "@remix-run/react"
+import { json, redirect } from "@remix-run/node";
+import { useActionData, useCatch, Link } from "@remix-run/react";
 
 import { db } from "~/utils/db.server"
-import { requireUserId } from "~/utils/session.server"
+import { requireUserId, getUserId } from "~/utils/session.server"
+
+export const loader = async ({ request }) => {
+  const userId = await getUserId(request)
+  if (!userId) {
+    throw new Response("Unauthorized", { status: 401 })
+  }
+  return json({})
+}
 
 function validateJokeContent(content) {
   if (content.length < 10) {
@@ -12,20 +20,20 @@ function validateJokeContent(content) {
 
 function validateJokeName(name) {
   if (name.length < 3) {
-    return `That joke's name is too short`;
+    return `That joke's name is too short`
   }
 }
 
 const badRequest = (data) =>
   json(data, { status: 400 })
 
-export const action = async ({ request }) => {
+export const action = async ({
+  request,
+}) => {
   const userId = await requireUserId(request)
   const form = await request.formData()
   const name = form.get("name")
   const content = form.get("content")
-  // we do this type check to be extra sure and to make TypeScript happy
-  // we'll explore validation next!
   if (
     typeof name !== "string" ||
     typeof content !== "string"
@@ -39,9 +47,7 @@ export const action = async ({ request }) => {
     name: validateJokeName(name),
     content: validateJokeContent(content)
   }
-
   const fields = { name, content }
-
   if (Object.values(fieldErrors).some(Boolean)) {
     return badRequest({ fieldErrors, fields })
   }
@@ -128,6 +134,27 @@ export default function NewJokeRoute() {
           </button>
         </div>
       </form>
+    </div>
+  )
+}
+
+export function CatchBoundary() {
+  const caught = useCatch()
+
+  if (caught.status === 401) {
+    return (
+      <div className="error-container">
+        <p>You must be logged in to create a joke.</p>
+        <Link to="/login">Login</Link>
+      </div>
+    )
+  }
+}
+
+export function ErrorBoundary() {
+  return (
+    <div className="error-container">
+      Something unexpected went wrong. Sorry about that.
     </div>
   )
 }
